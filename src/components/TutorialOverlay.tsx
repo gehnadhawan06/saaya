@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, X, Target } from 'lucide-react';
+import { ChevronRight, ChevronLeft, X, Target, Globe, Volume2, SkipForward, RotateCcw } from 'lucide-react';
 import type { AppState } from '../App';
 
 interface TutorialOverlayProps {
@@ -9,11 +9,13 @@ interface TutorialOverlayProps {
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ appState, updateAppState }) => {
   const [showOverlay, setShowOverlay] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const currentStep = appState.tutorialSteps[appState.currentStep];
 
   useEffect(() => {
     if (appState.tutorialSteps.length > 0) {
       setShowOverlay(true);
+      setIsMinimized(false);
     }
   }, [appState.tutorialSteps]);
 
@@ -46,6 +48,25 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ appState, upda
         });
         setShowOverlay(false);
       }, 2000);
+    }
+  };
+
+  const speakCurrentStep = () => {
+    if (currentStep && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(
+        `Step ${appState.currentStep + 1}: ${currentStep.action}. ${currentStep.description}`
+      );
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const openWebsiteIfNeeded = () => {
+    if (appState.currentWebsite) {
+      window.open(appState.currentWebsite, '_blank');
     }
   };
 
