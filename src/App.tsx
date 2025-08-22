@@ -41,15 +41,8 @@ function App() {
     screenStream: null,
   });
 
-  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini-api-key') || '');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
-
-  useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem('gemini-api-key', apiKey);
-      setShowApiKeyInput(false);
-    }
-  }, [apiKey]);
+  // Hardcode the API key here
+  const [apiKey] = useState('YOUR_HARDCODED_API_KEY_HERE');
 
   const updateAppState = (updates: Partial<AppState>) => {
     console.log('App: Updating state with:', updates);
@@ -59,55 +52,6 @@ function App() {
       return newState;
     });
   };
-
-  if (showApiKeyInput) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-md w-full border border-white/20">
-          <div className="text-center mb-6">
-            <Brain className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">AI Screen Tutorial</h1>
-            <p className="text-white/70">Enter your Gemini API key to get started</p>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
-                Gemini API Key
-              </label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your API key..."
-              />
-            </div>
-            
-            <button
-              onClick={() => apiKey && setShowApiKeyInput(false)}
-              disabled={!apiKey}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
-            >
-              Continue
-            </button>
-            
-            <p className="text-white/60 text-sm text-center">
-              Get your API key from{' '}
-              <a
-                href="https://makersuite.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                Google AI Studio
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
@@ -124,7 +68,7 @@ function App() {
                 <p className="text-white/60 text-sm">Powered by Gemini 2.0 Flash</p>
               </div>
             </div>
-            
+
             <StatusBar appState={appState} />
           </div>
         </div>
@@ -169,7 +113,7 @@ function App() {
               updateAppState={updateAppState}
               apiKey={apiKey}
             />
-            
+
             {/* Tutorial Steps */}
             {appState.tutorialSteps.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
