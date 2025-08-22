@@ -36,8 +36,8 @@ function App() {
     screenStream: null,
   });
 
-  // Use the API key from the environment file, with a fallback
-  const [apiKey] = useState(process.env.REACT_APP_GEMINI_API_KEY || '');
+  // Hardcode the API key here
+  const [apiKey] = useState('YOUR_HARDCODED_API_KEY_HERE');
 
   const updateAppState = (updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }));
