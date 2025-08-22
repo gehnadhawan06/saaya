@@ -23,6 +23,11 @@ export interface AppState {
   tutorialSteps: TutorialStep[];
   currentStep: number;
   screenStream: MediaStream | null;
+  selectedWindow?: string | null;
+  isMonitoringContent?: boolean;
+  contentMonitoringInterval?: number;
+  currentWebsite?: string;
+  detectedApplication?: string;
 }
 
 function App() {
@@ -47,7 +52,12 @@ function App() {
   }, [apiKey]);
 
   const updateAppState = (updates: Partial<AppState>) => {
-    setAppState(prev => ({ ...prev, ...updates }));
+    console.log('App: Updating state with:', updates);
+    setAppState(prev => {
+      const newState = { ...prev, ...updates };
+      console.log('App: New state:', newState);
+      return newState;
+    });
   };
 
   if (showApiKeyInput) {
@@ -134,8 +144,21 @@ function App() {
           {/* Screen Share Section */}
           <div className="lg:col-span-2">
             <ScreenShare 
-              appState={appState} 
-              updateAppState={updateAppState}
+              onStreamUpdate={(stream) => {
+                console.log('Screen share stream update:', stream);
+                updateAppState({ screenStream: stream, isScreenSharing: !!stream });
+              }}
+              onDetectedApp={(appName) => updateAppState({ detectedApplication: appName })}
+              currentStep={
+                appState.tutorialSteps.length > 0 && appState.currentStep < appState.tutorialSteps.length
+                  ? appState.tutorialSteps[appState.currentStep]?.description
+                  : undefined
+              }
+              tutorialActive={appState.tutorialSteps.length > 0}
+              currentCommand={appState.currentCommand}
+              onPhantomComplete={() => {
+                console.log('Phantom AI tutorial completed');
+              }}
             />
           </div>
 

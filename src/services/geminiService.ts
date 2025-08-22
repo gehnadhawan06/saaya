@@ -11,6 +11,48 @@ interface GeminiResponse {
   steps: TutorialStep[];
 }
 
+export async function generateStepGuidance(action: string, description: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `Generate a clear, friendly voice instruction for the following step:
+            
+            Action: ${action}
+            Description: ${description}
+            
+            Provide a single sentence that guides the user on what to do next. Make it conversational and encouraging.
+            For example: "Now, click on the Compose button in the top left corner to start writing your email."
+            
+            Keep the instruction under 20 words and make it actionable.`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 100,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    return content?.trim() || `Please ${action.toLowerCase()}: ${description}`;
+  } catch (error) {
+    console.error('Error generating step guidance:', error);
+    return `Please ${action.toLowerCase()}: ${description}`;
+  }
+}
+
 export async function processVoiceCommand(command: string, apiKey: string): Promise<GeminiResponse | null> {
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
@@ -113,7 +155,58 @@ function createFallbackSteps(command: string): GeminiResponse {
   
   let steps: TutorialStep[] = [];
   
-  if (lowerCommand.includes('delete') && lowerCommand.includes('photo')) {
+  if (lowerCommand.includes('gmail') || lowerCommand.includes('compose') || lowerCommand.includes('send email')) {
+    steps = [
+      {
+        id: 'step-1',
+        command,
+        description: 'Open Gmail by going to gmail.com in your browser',
+        coordinates: { x: 400, y: 60 },
+        action: 'Navigate to Gmail',
+        completed: false
+      },
+      {
+        id: 'step-2',
+        command,
+        description: 'Click on the "Compose" button on the left side',
+        coordinates: { x: 120, y: 200 },
+        action: 'Click Compose Button',
+        completed: false
+      },
+      {
+        id: 'step-3',
+        command,
+        description: 'Enter the recipient email address in the "To" field',
+        coordinates: { x: 600, y: 250 },
+        action: 'Enter Recipient Email',
+        completed: false
+      },
+      {
+        id: 'step-4',
+        command,
+        description: 'Click on the subject field and enter your email subject',
+        coordinates: { x: 600, y: 300 },
+        action: 'Enter Subject',
+        completed: false
+      },
+      {
+        id: 'step-5',
+        command,
+        description: 'Click in the message body area and type your email content',
+        coordinates: { x: 600, y: 400 },
+        action: 'Write Email Content',
+        completed: false
+      },
+      {
+        id: 'step-6',
+        command,
+        description: 'Click the "Send" button to send your email',
+        coordinates: { x: 150, y: 550 },
+        action: 'Send Email',
+        completed: false
+      }
+    ];
+  } else if (lowerCommand.includes('delete') && lowerCommand.includes('photo')) {
     steps = [
       {
         id: 'step-1',
@@ -126,7 +219,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-2',
         command,
-        description: 'Find and select the photo you want to delete',
+        description: 'Find and select the photo you want to delete by clicking on it',
         coordinates: { x: 400, y: 300 },
         action: 'Select Photo',
         completed: false
@@ -134,7 +227,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-3',
         command,
-        description: 'Look for the delete button (usually a trash icon)',
+        description: 'Look for the delete button (usually a trash icon) and click it',
         coordinates: { x: 600, y: 100 },
         action: 'Click Delete Button',
         completed: false
@@ -142,44 +235,44 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-4',
         command,
-        description: 'Confirm the deletion when prompted',
+        description: 'Confirm the deletion when prompted by clicking "Delete" or "OK"',
         coordinates: { x: 500, y: 400 },
         action: 'Confirm Delete',
         completed: false
       }
     ];
-  } else if (lowerCommand.includes('email')) {
+  } else if (lowerCommand.includes('google docs') || lowerCommand.includes('document')) {
     steps = [
       {
         id: 'step-1',
         command,
-        description: 'Open your email application',
-        coordinates: { x: 100, y: 200 },
-        action: 'Open Email App',
+        description: 'Open Google Docs by going to docs.google.com',
+        coordinates: { x: 400, y: 60 },
+        action: 'Navigate to Google Docs',
         completed: false
       },
       {
         id: 'step-2',
         command,
-        description: 'Click on the compose or new email button',
-        coordinates: { x: 150, y: 150 },
-        action: 'Click Compose',
+        description: 'Click on the "+" button or "Blank document" to create a new document',
+        coordinates: { x: 200, y: 200 },
+        action: 'Create New Document',
         completed: false
       },
       {
         id: 'step-3',
         command,
-        description: 'Fill in the recipient email address',
-        coordinates: { x: 400, y: 200 },
-        action: 'Enter Recipient',
+        description: 'Click in the document area and start typing your content',
+        coordinates: { x: 500, y: 300 },
+        action: 'Start Writing',
         completed: false
       },
       {
         id: 'step-4',
         command,
-        description: 'Write your message and click send',
-        coordinates: { x: 600, y: 500 },
-        action: 'Send Email',
+        description: 'Your document is automatically saved. You can rename it by clicking "Untitled document"',
+        coordinates: { x: 300, y: 100 },
+        action: 'Rename Document',
         completed: false
       }
     ];
@@ -189,7 +282,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-1',
         command,
-        description: 'Identify the relevant application or area on your screen',
+        description: 'Identify the relevant application or area on your screen for this task',
         coordinates: { x: 300, y: 250 },
         action: 'Locate Target Area',
         completed: false
@@ -197,7 +290,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-2',
         command,
-        description: 'Navigate to the appropriate menu or section',
+        description: 'Navigate to the appropriate menu or section needed for your task',
         coordinates: { x: 450, y: 200 },
         action: 'Navigate to Section',
         completed: false
@@ -205,7 +298,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-3',
         command,
-        description: 'Perform the requested action',
+        description: 'Perform the main action required for your task',
         coordinates: { x: 500, y: 350 },
         action: 'Execute Action',
         completed: false
@@ -213,7 +306,7 @@ function createFallbackSteps(command: string): GeminiResponse {
       {
         id: 'step-4',
         command,
-        description: 'Verify the action was completed successfully',
+        description: 'Verify that the action was completed successfully',
         coordinates: { x: 400, y: 450 },
         action: 'Verify Completion',
         completed: false
